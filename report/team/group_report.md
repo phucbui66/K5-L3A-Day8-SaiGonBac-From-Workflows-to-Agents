@@ -6,7 +6,7 @@ Số liệu lấy từ báo cáo do công cụ lab sinh ra; phạm vi đánh gi�
 
 - Tên nhóm: SaiGonBac.
 - Thành viên: Bùi Hữu Phúc (2A202603572), Trần Thành Nam (2A202603564); xem [TEAM.md](../../TEAM.md).
-- Commit chốt : 5b624ce
+- Commit chốt : 23642e0
 
 ## 2. Mục tiêu và cách tiếp cận
 
