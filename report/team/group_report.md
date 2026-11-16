@@ -6,7 +6,7 @@ Số liệu lấy từ báo cáo do công cụ lab sinh ra; phạm vi đánh gi�
 
 - Tên nhóm: SaiGonBac.
 - Thành viên: Bùi Hữu Phúc (2A202603572), Trần Thành Nam (2A202603564); xem [TEAM.md](../../TEAM.md).
-- Commit chốt (trùng [decision_adr.md](decision_adr.md)): chờ chốt và đồng bộ; ADR hiện ghi `678d25c` là commit nền.
+- Commit chốt : 5b624ce
 
 ## 2. Mục tiêu và cách tiếp cận
 
