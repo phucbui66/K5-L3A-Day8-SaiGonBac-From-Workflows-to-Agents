@@ -12,7 +12,7 @@
 | STT | Họ tên | MSSV | Email | GitHub | Vai trò |
 | --: | ------ | ---- | ----- | ------ | ------- |
 |   1 |     Bùi Hữu Phúc   |  2A202603572    | phucbh.66.24@gmail.com      | phucbui66       | Workflow + Single; nghiệp vụ, retry/crash; tích hợp và báo cáo nhóm |
-|   2 |   Trần Thành Nam     |      |   thanhnam120304@gmail.com    |        | Orchestrator; handoff/trace; benchmark, ablation, ADR và research card |
+|   2 |   Trần Thành Nam     | 2A202603564 |   thanhnam120304@gmail.com    |        | Orchestrator; handoff/trace; benchmark, ablation, ADR và research card |
 
 Gợi ý chia vai:
 
@@ -27,6 +27,7 @@ Gợi ý chia vai:
 | Người | Vai | Commit | Test đã thêm hoặc sửa |
 | --- | --- | --- | --- |
 | Bùi Hữu Phúc | Đã triển khai workflow, single và test nghiệp vụ/retry/crash; soạn phần báo cáo được giao |  | [test_team_workflow_single.py](src/tests/test_team_workflow_single.py): 11 hàm test, 46 ca; gồm crash cả 3 vị trí, approval sai claim, top-up/retry và trace |
+| Trần Thành Nam | Triển khai orchestrator, handoff/trace, benchmark, ablation, ADR và research card | Chưa commit | [test_team_orchestrator.py](src/tests/test_team_orchestrator.py): 7 ca; gồm chặn tool ghi, lọc secret và retry ở 3 cửa sổ crash |
 
 Đây là bảng đang hoàn thiện. Thành viên 2 bổ sung một dòng với commit và test thực tế của mình; điền định danh thật của thành viên 1 trước khi nộp.
 

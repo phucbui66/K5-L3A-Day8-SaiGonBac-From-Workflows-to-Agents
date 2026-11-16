@@ -67,6 +67,10 @@ def make_handoff(
 def sanitize(payload: dict[str, Any]) -> dict[str, Any]:
     """Drop anything outside the allowlist, then refuse canaries that remain."""
     cleaned = {key: payload[key] for key in ALLOWED_FIELDS if key in payload}
+    facts = cleaned.get("facts") or {}
+    if not isinstance(facts, dict):
+        raise HandoffError("handoff facts must be a mapping")
+    cleaned["facts"] = {key: facts[key] for key in FACT_KEYS if key in facts}
     if set(payload) - ALLOWED_FIELDS:
         # Extra keys are removed. They are not forwarded.
         pass
@@ -74,6 +78,6 @@ def sanitize(payload: dict[str, Any]) -> dict[str, Any]:
     if "CANARY_SECRET_" in blob or "parent_secret" in blob or "raw_headers" in blob:
         raise HandoffError("handoff still contains a parent secret or header material")
     tools = cleaned.get("allowed_tools") or []
-    if set(tools) & WRITE_TOOLS:
-        raise HandoffError("handoff granted a write tool")
+    if not isinstance(tools, list) or set(tools) - READONLY_TOOLS:
+        raise HandoffError("handoff granted a non-read-only tool")
     return cleaned
