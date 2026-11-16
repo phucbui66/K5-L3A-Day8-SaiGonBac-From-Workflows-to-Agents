@@ -29,8 +29,12 @@ ones. `lab8.trace.Trace` does this; your own tracer is fine if it matches.
 
 from __future__ import annotations
 
-from lab8.schemas import RunResult
-from lab8.shapes.common import not_implemented
+from lab8.db import connect
+from lab8.durability import issue_refund
+from lab8.schemas import Budget, RunResult, make_run_id
+from lab8.shapes.common import finish
+from lab8.tools import compute_compensation, get_claim_view, lookup_order, tool_cost
+from lab8.trace import Trace
 
 
 def run_claim(
@@ -40,7 +44,55 @@ def run_claim(
     store_path: str,
     crash_at: str | None = None,
 ) -> RunResult:
-    # TODO CP2 (student): thay stub này bằng shape workflow theo các bước ở docstring đầu file.
-    # TODO CP3 (student): truyền crash_at vào durability.issue_refund, không bắt InjectedCrash.
-    del store_path, crash_at
-    return not_implemented("workflow", claim_id, seed)
+    conn = connect(store_path)
+    budget = Budget()
+    trace = Trace(make_run_id("workflow", claim_id, seed))
+
+    def done(status: str, proposal: int = 0, reason: str | None = None) -> RunResult:
+        trace.add("decision", {"status": status, "proposal_amount": proposal, "reason": reason})
+        return finish(
+            conn,
+            shape="workflow",
+            claim_id=claim_id,
+            seed=seed,
+            status=status,
+            proposal_amount=proposal,
+            budget=budget,
+            trace=trace,
+            error_reason=reason,
+        )
+
+    try:
+        budget.add_tool(tool_cost())
+        claim = get_claim_view(conn, claim_id)
+        # Never log the ticket: even an allowed claim view contains untrusted text.
+        trace.add("claim", {"found": claim["found"], "has_order_id": bool(claim.get("order_id"))})
+        if not claim["found"]:
+            return done("failed", reason="unknown_claim")
+        if not claim.get("order_id"):
+            return done("needs_info", reason="missing_order_id")
+
+        budget.add_tool(tool_cost())
+        order_view = lookup_order(conn, claim["order_id"], claim["principal_id"])
+        trace.add("lookup_order", {"visible": order_view["visible"], "reason": order_view["reason"]})
+        if not order_view["visible"]:
+            return done("escalated", reason=order_view["reason"])
+
+        budget.add_tool(tool_cost())
+        quote = compute_compensation(conn, order_view["order"])
+        proposal = int(quote["amount_vnd"])
+        trace.add("quote", quote)
+        if proposal <= 0:
+            return done("denied", reason=quote["reason"])
+
+        # The host owns approval, the per-order cap and exactly-once writes.
+        # In particular, it must receive the full quote, not a pre-subtracted net.
+        outcome = issue_refund(conn, claim_id, proposal, crash_at=crash_at)
+        trace.add("host_outcome", {"ok": outcome["ok"], "reason": outcome["reason"]})
+        if not outcome["ok"]:
+            status = "failed" if outcome["conflict"] else "denied"
+            return done(status, proposal, outcome["reason"])
+        return done("resolved", proposal)
+    finally:
+        # InjectedCrash propagates to the caller; closing does not undo a commit.
+        conn.close()
